@@ -7,33 +7,42 @@ jobs:
     runs-on: ubuntu-latest 
     
     steps:
-    - name : Checkout code
-      uses : actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
       
-    - name : Run tests 
-      run : python tests_rpg.py
+    - name: Run tests 
+      run: python tests_rpg.py
 
-    - name : Handle Success
-      if : success()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run : |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git fetch origin main
-        git checkout main
-        git merge --allow-unrelated-histories --ff-only origin/develop
-        git push origin main
-    - name : Handle Failure
-      if : failure()
+    - name: Handle Success
+      if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          UNIQUE_ID=$(date +%s)
-          git reset HEAD~1
-          git checkout -b failures/$UNIQUE_ID
-          git add .
-          git commit -m "Failed commit moved to failures/$UNIQUE_ID"
-          git push origin failures/$UNIQUE_ID
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Récupérer les dernières modifications
+        git fetch origin main
+        
+        # Assurer que la branche locale est bien "main"
+        git checkout main
+        
+        # Tenter un fast-forward
+        git merge --ff-only origin/main || exit 1
+
+        # Pousser les changements uniquement si le fast-forward est réussi
+        git push origin main
+
+    - name: Handle Failure
+      if: failure()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        UNIQUE_ID=$(date +%s)
+        git reset HEAD~1
+        git checkout -b failures/$UNIQUE_ID
+        git add .
+        git commit -m "Failed commit moved to failures/$UNIQUE_ID"
+        git push origin failures/$UNIQUE_ID
