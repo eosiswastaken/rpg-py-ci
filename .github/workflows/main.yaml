@@ -1,0 +1,31 @@
+name: Run tests on push
+
+on: push 
+
+jobs:
+  unit-testing:
+    runs-on: ubuntu-latest 
+    
+    steps:
+    - name : Checkout code
+      uses : actions/checkout@v2
+      
+    - name : Run tests 
+      run : python tests_rpg.py
+
+    - name : Handle Success
+      if : success()
+      run : |
+        git fetch origin main
+        git checkout main
+        git merge --ff-only $GITHUB_REF_NAME
+        git push origin main
+    - name : Handle Failure
+      if : failure()
+      run: |
+          UNIQUE_ID=$(date +%s)
+          git reset HEAD~1
+          git checkout -b failures/$UNIQUE_ID
+          git add .
+          git commit -m "Failed commit moved to failures/$UNIQUE_ID"
+          git push origin failures/$UNIQUE_ID
