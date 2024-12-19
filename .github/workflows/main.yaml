@@ -24,7 +24,7 @@ jobs:
       if : failure()
       run: |
           UNIQUE_ID=$(date +%s)
-          git reset HEAD~1
+          git reset HEAD@{1}
           git checkout -b failures/$UNIQUE_ID
           git add .
           git commit -m "Failed commit moved to failures/$UNIQUE_ID"
